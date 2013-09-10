@@ -2,9 +2,25 @@
 
 import sys, re, os, time, commands
 
+authfile = '/data/svn/auth.conf'
+newauthfile = '/data/svn/newauth.conf'
+passwdfile = '/data/svn/passwd'
+
 def usage():
     print 'Usage:'
     print '\tsvnuser.py username passwd passwd_again'
+
+def is_username_exists(username):
+        try:
+                p = open(passwdfile, 'r')
+        except IOError, e:
+                print '[ERROR] %s does not exist.' % passwdfile
+
+        for line in p:
+                if line.split(':')[0] == username:
+                        return True
+        return False
+
 
 if len(sys.argv) != 4:
     usage()
@@ -28,28 +44,26 @@ if len(passwd) < 6:
 
 # handle access file for user
 
-authfile = '/data/svn/auth.conf'
-newauthfile = '/data/svn/newauth.conf'
 
 try:
-     f = open(authfile, 'r')
+        f = open(authfile, 'r')
 except IOError, e:
-     print '[ERROR] %s does not exist.' % authfile
+        print '[ERROR] %s does not exist.' % authfile
 
 try:
-     g = open(newauthfile, 'w+')
+        g = open(newauthfile, 'w+')
 except IOError, e:
-     print '[ERROR] %s does not exist.' % newauthfile    
+        print '[ERROR] %s does not exist.' % newauthfile
 
 newuser = True
-    
+
 for line in f:
     if re.match('group=', line):
-        if username in line:
+        if is_username_exists(username):
             print '[WARNING] Account %s already exists.' % username
             os.remove(newauthfile)
-         newuser = False               
-         break    
+            newuser = False
+            break
         else:
             newline = line[:-1] + ',' + username + '\n'
         g.write(newline)
@@ -57,18 +71,18 @@ for line in f:
         g.write(line)
 
 if newuser:
-     print '[INFO] New svn account %s created.' % username
-     bakstamp = time.strftime('%Y%m%d_%H%M%S', time.localtime(os.path.getmtime(newauthfile)))
-     bakfile = authfile + '.' + bakstamp
-     os.rename(authfile, bakfile)
-     os.rename(newauthfile, authfile)
+        print '[INFO] New svn account %s created.' % username
+        bakstamp = time.strftime('%Y%m%d_%H%M%S', time.localtime(os.path.getmtime(newauthfile)))
+        bakfile = authfile + '.' + bakstamp
+        os.rename(authfile, bakfile)
+        os.rename(newauthfile, authfile)
 
 f.close()
 g.close()
 
 #Add passwd for new user, or update passwd for existing user
 
-pwdcmd = '/usr/local/apache/bin/htpasswd -b /data/svn/pass ' + username + ' ' + passwd
+pwdcmd = '/usr/local/apache/bin/htpasswd -b '+ passwdfile + ' ' + username + ' ' + passwd
 
 status,output = commands.getstatusoutput(pwdcmd)
 if status == 0:
