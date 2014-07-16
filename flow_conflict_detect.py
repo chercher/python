@@ -88,4 +88,6 @@ if __name__== '__main__':
 		sys.stdout.flush()
 		time.sleep(60)
 		if_conflict=detect_conflict(conflict_detect_job_url)
+	print 'no conflict'
+	sys.stdout.flush()	
 	sys.exit(0)
