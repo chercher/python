@@ -14,8 +14,7 @@ def parse_json(jsonurl, key):
 	elif key=='downstreamProjects':
 		flows.append(result[0]['url'])
 	else:
-		print 'parse_json does not parse %s with %s' % (jsonurl, key)
-		sys.exit(1)
+		sys.exit('parse_json does not parse %s with %s' % (jsonurl, key))
 	return flows
 		
 def parse_dsl(flowlist):
@@ -54,13 +53,11 @@ def parse_dsl(flowlist):
 
 	return doltbl
 
-def detect_conflict():
-
+def detect_conflict(conflict_detect_job_url):
         building_api_url='http://10.1.7.159/view/building/api/json'
-        conflict_detect_url=sys.argv[1]
 
         building_flows=parse_json(building_api_url, 'jobs')
-        tobuild_flow=parse_json(conflict_detect_url, 'downstreamProjects')
+        tobuild_flow=parse_json(conflict_detect_job_url, 'downstreamProjects')
 
         building_doltbl=parse_dsl(building_flows)
         tobuild_doltbl=parse_dsl(tobuild_flow)	
@@ -70,9 +67,12 @@ def detect_conflict():
 	return False
 
 if __name__== '__main__':
-	
-	if_conflict=detect_conflict()
+	if (len(sys.argv) != 2):
+		sys.exit('Usage: %s conflict_detect_job_url' % sys.argv[0])
+
+        conflict_detect_job_url=sys.argv[1]
+	if_conflict=detect_conflict(conflict_detect_job_url)
 	while if_conflict:
 		time.sleep(10)
-		if_conflict=detect_conflict()
+		if_conflict=detect_conflict(conflict_detect_job_url)
 	sys.exit(0)
