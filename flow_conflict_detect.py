@@ -3,8 +3,11 @@
 import urllib2,json,re,libxml2,sys,time
 
 def parse_json(jsonurl, key):
-	response=urllib2.urlopen(jsonurl).read()
-	result=json.loads(response)[key]
+	try:
+		response=urllib2.urlopen(jsonurl).read()
+		result=json.loads(response)[key]
+	except urllib2.HTTPError:
+		sys.exit('HTTP Error 404: Not Found %s' % jsonurl)
 	
 	flows=[]
 	if key=='jobs':
@@ -21,13 +24,18 @@ def parse_dsl(flowlist):
 	dsls=[]
 	for flow in flowlist:
 		configurl=flow+'config.xml'
-		configxml=urllib2.urlopen(configurl).read()
-		doc=libxml2.parseDoc(configxml)
-		ctxt=doc.xpathNewContext()
-		dsl=ctxt.xpathEval('//dsl')
-		dsls.append(dsl[0].content.replace('\n', ''))
-		doc.freeDoc()
-		ctxt.xpathFreeContext()
+		try:
+			configxml=urllib2.urlopen(configurl).read()
+			doc=libxml2.parseDoc(configxml)
+			ctxt=doc.xpathNewContext()
+			dsl=ctxt.xpathEval('//dsl')
+			if dsl:
+				dsls.append(dsl[0].content.replace('\n', ''))
+			doc.freeDoc()
+			ctxt.xpathFreeContext()
+		except urllib2.HTTPError: 
+			sys.exit('HTTP Error 404: Not Found %s' % configurl)
+
 	alldols=[]
 	alltbls=[]
 	for dsl in dsls:
@@ -61,6 +69,9 @@ def detect_conflict(conflict_detect_job_url):
 
         building_doltbl=parse_dsl(building_flows)
         tobuild_doltbl=parse_dsl(tobuild_flow)	
+
+	#print building_doltbl
+	#print tobuild_doltbl
 	
 	if (len(building_doltbl[0].intersection(tobuild_doltbl[0])) != 0) or (len(building_doltbl[0].intersection(tobuild_doltbl[1])) != 0) or (len(building_doltbl[1].intersection(tobuild_doltbl[0])) != 0):
 		return True
