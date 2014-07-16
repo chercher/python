@@ -71,8 +71,8 @@ def detect_conflict():
 
 if __name__== '__main__':
 	
-	if_conflict=True
+	if_conflict=detect_conflict()
 	while if_conflict:
+		time.sleep(10)
 		if_conflict=detect_conflict()
-		time.sleep(2)
 	sys.exit(0)
