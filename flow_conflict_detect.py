@@ -84,7 +84,7 @@ if __name__== '__main__':
         conflict_detect_job_url=sys.argv[1]
 	if_conflict=detect_conflict(conflict_detect_job_url)
 	while if_conflict:
-		print 'conflict occurs! wait 10 secondes ...'
+		print 'conflict occurs! wait 60 secondes ...'
 		sys.stdout.flush()
 		time.sleep(60)
 		if_conflict=detect_conflict(conflict_detect_job_url)
